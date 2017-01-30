@@ -36,7 +36,7 @@ public class Lab3
 
 		Odometer odometer = new Odometer(leftMotor, rightMotor);
 		final TriangleDriver avoidObstacles = new TriangleDriver(odometer, leftMotor, rightMotor, WHEEL_RADIUS, TRACK, motorStraight);
-		UltrasonicPoller usPoller = new UltrasonicPoller(usDistance, usData, leftMotor, rightMotor,avoidObstacles);
+		UltrasonicPoller usPoller = new UltrasonicPoller(usDistance, usData, avoidObstacles);
 
 		OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, t, usPoller);
 		final PatternDriver noObstacles = new PatternDriver(odometer, leftMotor, rightMotor, WHEEL_RADIUS, TRACK, motorStraight);

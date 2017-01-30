@@ -13,6 +13,8 @@ public class TriangleDriver extends Thread {
 	private double odX;
 	private double odY;
 	private final int motorStraight;
+	private int bandCenter=25;
+	private boolean path = false;
 
 	public TriangleDriver(Odometer od, EV3LargeRegulatedMotor lm, EV3LargeRegulatedMotor rm, double wr, double t, int ms)
 	{
@@ -32,17 +34,16 @@ public class TriangleDriver extends Thread {
 			motor.setAcceleration(100);
 		}
 
-		while(!Thread.interrupted() && isNavigating)
-		{
-			travelTo(0.0, 60.0);
-			travelTo(60.0, 0.0);
-		}
+		travelTo(0.0, 60.0);
+		travelTo(60.0, 0.0);
 	}
 
 	public void travelTo(double x, double y)
 	{
 		isNavigating = true;
-		
+		if(x==60.0) {
+			path = true;
+		}
 		odTheta = odometer.getTheta();
 		odX = odometer.getX();
 		odY = odometer.getY();
@@ -60,7 +61,7 @@ public class TriangleDriver extends Thread {
 
 		leftMotor.rotate(convertDistance(WHEEL_RADIUS, dist), true);
 		rightMotor.rotate(convertDistance(WHEEL_RADIUS, dist), false);
-		
+
 		isNavigating = false;
 	}
 
@@ -84,55 +85,56 @@ public class TriangleDriver extends Thread {
 	{
 		return isNavigating;
 	}
-	
+
 	public void setNavigating(boolean state)
 	{
 		isNavigating = state;
 	}
 
-	public void runWallFollower(double x, double y)
-	  {
-	    turnTo(odometer.getTheta() + 50.0D);
-	    
-	    double startX = odometer.getX();
-	    double startY = odometer.getY();
-	    
-	    double lineB = x - startX;
-	    double lineA = y - startY;
-	    double lineC = lineB * startY - lineA * startX;
-	    
-	    double distFromStart = 0.0D;
-	    double distToLine = 0.0D;
-	    while ((distToLine > 1.0D) || (distFromStart < 5.0D))
-	    {
-	      double distance = 23;
-	      
-	      this.leftMotor.setSpeed(this.motorStraight);
-	      this.leftMotor.forward();
-	      if (distance <= 23.0D)
-	      {
-	        this.rightMotor.setSpeed(20);
-	        this.rightMotor.forward();
-	      }
-	      else if (distance >= 27.0D)
-	      {
-	        this.rightMotor.setSpeed(280);
-	        this.rightMotor.forward();
-	      }
-	      else
-	      {
-	        this.rightMotor.setSpeed(this.motorStraight);
-	        this.rightMotor.forward();
-	      }
-	      this.odTheta = this.odometer.getTheta();
-	      this.odX = this.odometer.getX();
-	      this.odY = this.odometer.getY();
-	      
-	      distFromStart = Math.sqrt((startX - this.odX) * (startX - this.odX) + (startY - this.odY) * (startY - this.odY));
-	      distToLine = Math.abs(lineA * this.odX - lineB * this.odY + lineC) / Math.sqrt(lineA * lineA + lineB * lineB);
-	    }
-	  }
-	
+	public void runWallFollower()
+	{
+		double x,y;
+		
+		if(path)
+		{
+			//Stopping point = A
+			x = odometer.getX();
+			y = odometer.getY();
+			//Move in a square around the obstacle 
+			
+			//p1 = B
+			double p1X = x + (60.0 - x)/2.0; 
+			double p1Y = y + (60.0 - y)/2.0; 
+			
+			//p2 = C
+			double p2X = 60.0; 
+			double p2Y = p1Y - p1Y/2.0;
+			
+			//p3 = D
+			double p3X = x - (60.0 - x)/3.0; 
+			double p3Y = y - (y)/3.0;
+			
+			travelTo(p1X, p1Y);
+			travelTo(p2X, p2Y);
+			//travelTo(p3X, p3Y);
+			travelTo(60.0, 0.0);
+		}
+		else
+		{
+			x = 0.0;
+			y = 60.0;
+		}
+	}
+
+	void processUSData(int distance2) {
+		if(distance2 < bandCenter)
+		{	
+			leftMotor.stop();
+			rightMotor.stop();
+			runWallFollower();
+		}
+	}
+
 	private static int convertDistance(double radius, double distance) {
 		return (int) ((180.0 * distance) / (Math.PI * radius));
 	}
