@@ -40,17 +40,21 @@ public class PatternDriver extends Thread {
 	public void travelTo(double x, double y)
 	{
 		isNavigating = true;
-
+		
+		//Get Odometer readings
 		odTheta = odometer.getTheta();
 		odX = odometer.getX();
 		odY = odometer.getY();
 
+		//Compute the distance from the current poin to where you want to go
 		double dX = x - odX;
 		double dY = y - odY;
 
+		//Use the distances to comput the angle and turn to that angle 
 		double destTheta = Math.atan2(dY,dX);
 		turnTo((Math.PI/2.0) - destTheta);
 
+		//Compute the travel distance 
 		double dist = Math.sqrt(dX * dX + dY * dY);
 
 		leftMotor.setSpeed(motorStraight+100);
@@ -64,6 +68,8 @@ public class PatternDriver extends Thread {
 
 	public void turnTo(double destTheta)
 	{
+		//Compute the amount you need to turn
+		//Find the shortest angle for that angle
 		double dTheta = destTheta - odTheta;
 		if (dTheta < -Math.PI) {
 			dTheta += 2*Math.PI;
@@ -74,6 +80,7 @@ public class PatternDriver extends Thread {
 		leftMotor.setSpeed(motorStraight);
 		rightMotor.setSpeed(motorStraight);
 
+		//rotate to the angle
 		leftMotor.rotate(convertAngle(WHEEL_RADIUS, TRACK, dTheta), true);
 		rightMotor.rotate(-convertAngle(WHEEL_RADIUS, TRACK, dTheta), false);
 	}

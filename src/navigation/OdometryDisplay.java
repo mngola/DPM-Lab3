@@ -45,6 +45,7 @@ public class OdometryDisplay extends Thread {
 			for (int i = 0; i < 3; i++) {
 				t.drawString(formattedDoubleToString(position[i], 2), 3, i);
 			}
+			//Display The US sensor reading
 			t.drawString(Integer.toString(up.distance), 3, 3);
 
 			// throttle the OdometryDisplay

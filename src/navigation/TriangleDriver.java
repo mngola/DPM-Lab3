@@ -13,8 +13,9 @@ public class TriangleDriver extends Thread {
 	private double odX;
 	private double odY;
 	private final int motorStraight;
-	private int bandCenter=25;
+	private int bandCenter=19;
 	private boolean path = false;
+	private int bandwidth=1;
 
 	public TriangleDriver(Odometer od, EV3LargeRegulatedMotor lm, EV3LargeRegulatedMotor rm, double wr, double t, int ms)
 	{
@@ -22,7 +23,7 @@ public class TriangleDriver extends Thread {
 		rightMotor = rm;
 		odometer = od;
 		WHEEL_RADIUS = wr;
-		TRACK = t+0.2;
+		TRACK = t;
 		motorStraight = ms;
 	}
 
@@ -34,16 +35,16 @@ public class TriangleDriver extends Thread {
 			motor.setAcceleration(100);
 		}
 
-		travelTo(0.0, 60.0);
-		travelTo(60.0, 0.0);
+			travelTo(0.0, 60.0);
+			travelTo(60.0, 0.0);
 	}
 
+	/*
+	 * Travel to operates the same as in pattern driver 
+	 */
 	public void travelTo(double x, double y)
 	{
 		isNavigating = true;
-		if(x==60.0) {
-			path = true;
-		}
 		odTheta = odometer.getTheta();
 		odX = odometer.getX();
 		odY = odometer.getY();
@@ -65,9 +66,13 @@ public class TriangleDriver extends Thread {
 		isNavigating = false;
 	}
 
+	/*
+	 * turnTo operates the same as in Pattern driver 
+	 */
 	public void turnTo(double destTheta)
 	{
 		double dTheta = destTheta - odTheta;
+
 		if (dTheta < -Math.PI) {
 			dTheta += 2*Math.PI;
 		} else if (dTheta > Math.PI) {
@@ -91,47 +96,67 @@ public class TriangleDriver extends Thread {
 		isNavigating = state;
 	}
 
-	public void runWallFollower()
+	public void runWallFollower(int sensorDist)
 	{
-		double x,y;
-		
-		if(path)
+		double x,y,od;
+
+		//Stopping point = A
+		x = odometer.getX();
+		y = odometer.getY();
+		od = odometer.getTheta();
+
+		/*
+		 * Path reprepsents the direction the bot is going
+		 * When path is false, it's going up towards (0,60)
+		 * When path is true, it's going down towards (60,0)
+		 */
+		if(!path)
 		{
-			//Stopping point = A
-			x = odometer.getX();
-			y = odometer.getY();
 			//Move in a square around the obstacle 
-			
+			//p1 = B
+			double p1X = 30.0; 
+			double p1Y = y; 
+
+			//p2 = C
+			double p2X = 30.0; 
+			double p2Y = p1Y + 2* sensorDist;
+
+
+			travelTo(p1X, p1Y);
+			travelTo(p2X, p2Y);
+			travelTo(0.0, 60.0);
+		}
+
+		if(path) {
+			//Move in a square around the obstacle 
 			//p1 = B
 			double p1X = x + (60.0 - x)/2.0; 
 			double p1Y = y + (60.0 - y)/2.0; 
-			
+
 			//p2 = C
 			double p2X = 60.0; 
 			double p2Y = p1Y - p1Y/2.0;
-			
-			//p3 = D
-			double p3X = x - (60.0 - x)/3.0; 
-			double p3Y = y - (y)/3.0;
-			
+
+
 			travelTo(p1X, p1Y);
 			travelTo(p2X, p2Y);
-			//travelTo(p3X, p3Y);
-			travelTo(60.0, 0.0);
+			travelTo(50.0, -8.5);
 		}
-		else
-		{
-			x = 0.0;
-			y = 60.0;
-		}
+
+		System.exit(0);
 	}
 
+	/*
+	 * Proccess US data, if it's too close stop the motors and begin the wallFollower
+	 * This method gets call by the US Poller
+	 */
 	void processUSData(int distance2) {
 		if(distance2 < bandCenter)
 		{	
-			leftMotor.stop();
+			isNavigating = false;
+			leftMotor.stop(true);
 			rightMotor.stop();
-			runWallFollower();
+			runWallFollower(distance2);
 		}
 	}
 

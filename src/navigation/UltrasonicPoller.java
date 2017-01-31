@@ -22,7 +22,7 @@ public class UltrasonicPoller extends Thread{
 			us.fetchSample(usData, 0);
 			distance = ((int)(usData[0] * 100.0));
 			controller.processUSData(distance);
-			try { Thread.sleep(50); } catch (Exception localException) {}
+			try { Thread.sleep(30); } catch (Exception localException) {}
 		}
 	}
 }
